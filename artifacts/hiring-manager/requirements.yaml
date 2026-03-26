@@ -1,0 +1,20 @@
+packages:
+  "framer-motion": "For page transitions and smooth UI animations"
+  "recharts": "For dashboard applicant statistics charts"
+  "date-fns": "For formatting application dates easily"
+  "@hookform/resolvers": "For Zod form validation"
+  "react-hook-form": "For robust form state"
+  "clsx": "class merging utility"
+  "tailwind-merge": "class merging utility"
+
+images:
+  - path: "artifacts/hiring-manager/public/images/logo-mark.png"
+    description: "A minimalist, premium letter R logo mark in bright red, suitable for a modern restaurant chain dark mode interface."
+    aspect_ratio: "1:1"
+  - path: "artifacts/hiring-manager/public/images/hero-pizza.png"
+    description: "Dark moody cinematic photography of a wood-fired pizza with warm red glowing embers in the background, high contrast, negative space on the left, professional food photography."
+    aspect_ratio: "16:9"
+
+notes:
+  - Using existing @workspace/api-client-react hooks for all API interactions
+  - Application defaults to a dark mode styling with Red Front brand colors

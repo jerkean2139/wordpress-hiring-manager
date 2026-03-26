@@ -1,8 +1,8 @@
-# Workspace
+# Red Front Hiring Manager
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+Internal hiring manager tool for Red Front Pizza restaurant chain. Automatically captures job applications from the website's Contact Form 7 and provides a simple interface for reviewing, tracking, and managing applicants.
 
 ## Stack
 
@@ -12,85 +12,94 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
+- **Frontend**: React + Vite + Tailwind CSS
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **Auth**: Session-based (express-session + bcryptjs)
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
+├── artifacts/
+│   ├── api-server/         # Express API server (auth, applicants, notes, webhook, stats)
+│   └── hiring-manager/     # React + Vite frontend (PWA)
+├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+├── scripts/                # Utility scripts
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── tsconfig.json
+└── package.json
 ```
+
+## Database Schema
+
+### applicants
+Fields mapped from Red Front Pizza Contact Form 7:
+- id, location, position, name, email, address, city, state, zip
+- phoneHome, phoneBusiness, phoneCell
+- dateCanStart, salaryDesired, hasHighSchoolDiploma
+- rawPayload (JSONB - stores full webhook data for unmapped fields)
+- status (new, reviewed, interviewing, hired, rejected, archived)
+- createdAt, updatedAt
+
+### notes
+- id, applicantId, body, author, createdAt
+
+### users
+- id, email, password (bcrypt hashed), role (owner, manager)
+
+## Default Credentials
+
+- Owner: owner@redfrontpizza.com / redfront2024
+- Manager: manager@redfrontpizza.com / redfront2024
+
+## API Endpoints
+
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Current user
+- `POST /api/auth/logout` - Logout
+- `GET /api/applicants` - List applicants (with ?status, ?search, ?location, ?position filters)
+- `GET /api/applicants/:id` - Get applicant detail
+- `PATCH /api/applicants/:id` - Update applicant status
+- `DELETE /api/applicants/:id` - Delete applicant
+- `GET /api/applicants/:id/notes` - List notes
+- `POST /api/applicants/:id/notes` - Add note
+- `POST /api/webhook/cf7` - WordPress Contact Form 7 webhook endpoint
+- `GET /api/stats` - Dashboard statistics
+
+## WordPress Integration
+
+The webhook endpoint at `POST /api/webhook/cf7` accepts JSON or form-urlencoded POST requests from Contact Form 7's webhook plugin. It automatically maps known field names to the database schema and stores the raw payload for any unmapped fields.
+
+## Key Design Decisions
+
+- Dark theme with red accents matching Red Front brand
+- Mobile-first responsive design with large touch targets
+- Session-based auth (cookies) for simplicity
+- Raw webhook payload stored alongside structured fields (no data loss)
+- Status workflow: New → Reviewed → Interviewing → Hired/Rejected/Archived
 
 ## TypeScript & Composite Projects
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references.
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+- **Always typecheck from the root** — run `pnpm run typecheck`
+- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck
 
 ## Root Scripts
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
+- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
-## Packages
+## Package Commands
 
-### `artifacts/api-server` (`@workspace/api-server`)
-
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
-
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
-
-### `lib/db` (`@workspace/db`)
-
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
-
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+- `pnpm --filter @workspace/api-server run dev` — run the API dev server
+- `pnpm --filter @workspace/hiring-manager run dev` — run the frontend dev server
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API client hooks and Zod schemas
+- `pnpm --filter @workspace/db run push` — push database schema changes

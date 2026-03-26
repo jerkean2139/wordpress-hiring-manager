@@ -1,0 +1,141 @@
+You are building a production-ready internal hiring manager for a restaurant.
+
+Follow this EXACT spec. Do not improvise architecture.
+
+## Context
+
+- Platform: Replit (single app)
+- App Type: PWA
+- Users: Owner, Hiring Manager
+- Source: WordPress Contact Form 7
+- Goal: Simple, fast applicant tracking (HR-light)
+
+---
+
+## Core Requirements
+
+1. Pull applications automatically from Contact Form 7
+2. Store applicants in database
+3. Notify owner + hiring manager on new application
+4. Display applicants in editable table
+5. Support statuses:
+   - New
+   - Reviewed
+   - Interviewing
+   - Hired
+   - Rejected
+   - Archived
+6. Add notes per applicant
+7. Enable fast search
+8. Mobile-friendly PWA
+
+---
+
+## CRITICAL — FIELD MAPPING STEP (DO THIS FIRST)
+
+Before building the schema:
+
+1. Inspect the live Red Front Pizza employment form
+2. Identify ALL fields in Contact Form 7
+3. Return a structured list:
+   - field name
+   - type
+   - required/optional
+
+Then:
+
+4. Map those fields into the internal database schema
+5. Preserve original field names where possible
+6. Add only necessary system fields:
+   - id
+   - status
+   - timestamps
+   - notes relation
+
+DO NOT PROCEED until this mapping is complete.
+
+---
+
+## Architecture Rules
+
+- Single codebase (frontend + backend)
+- Clean separation of:
+  - routes
+  - services
+  - data models
+- No unnecessary frameworks
+- Keep dependencies minimal
+
+---
+
+## UI Rules
+
+- Simple table UI (primary screen)
+- Large touch-friendly rows
+- Action icons:
+  - view
+  - status change
+  - add note
+- Minimal dashboard feel
+- Mobile-first layout
+
+---
+
+## Data Model Minimum
+
+Applicants:
+- id
+- (mapped form fields)
+- status
+- created_at
+- updated_at
+
+Notes:
+- id
+- applicant_id
+- body
+- author
+- created_at
+
+Users:
+- id
+- email
+- password
+- role
+
+---
+
+## Integration
+
+- Build secure intake endpoint for WordPress
+- Accept POST payload from Contact Form 7
+- Validate and store data
+- Trigger email notification
+
+---
+
+## PWA Requirements
+
+- manifest.json
+- service worker
+- installable
+- responsive UI
+
+---
+
+## Constraints
+
+- Do not overengineer
+- Do not build unused features
+- Optimize for speed and clarity
+
+---
+
+## Output Expectations
+
+- Working app
+- Clean structure
+- Easy to extend later
+
+If any ambiguity:
+- Choose simplest possible solution

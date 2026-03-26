@@ -1,0 +1,121 @@
+# Red Front Hiring Manager (v1)
+
+## What This Is
+
+A lightweight internal hiring tool that automatically pulls job applications from the Red Front Pizza website (Contact Form 7) into a simple, searchable manager.
+
+This replaces manual email review and WordPress form digging with a single clean interface.
+
+---
+
+## Who It’s For
+
+- Owner
+- Hiring Manager
+
+---
+
+## What It Does
+
+- Automatically captures new job applications
+- Notifies owner + hiring manager
+- Displays applicants in a simple table
+- Tracks hiring status
+- Stores internal notes per applicant
+- Enables fast search of past applicants
+- Works as a mobile-installable PWA
+
+---
+
+## What It Does NOT Do (v1)
+
+- No payroll
+- No scheduling
+- No complex HR workflows
+- No external job board integrations
+
+This is intentionally HR-light
+
+---
+
+## How It Works
+
+1. Applicant submits form on website (Contact Form 7)
+2. WordPress sends application data to this app
+3. App stores applicant in database
+4. Notification is sent
+5. Applicant appears in manager UI
+
+---
+
+## Core Screens
+
+1. Login
+2. Applicant Table (main view)
+3. Applicant Detail (notes + status)
+4. Search & Filters
+
+---
+
+## Status Workflow
+
+- New
+- Reviewed
+- Interviewing
+- Hired
+- Rejected
+- Archived
+
+---
+
+## Key Design Principle
+
+> Fast review, low friction, zero training required
+
+---
+
+## Deployment
+
+- Built on Replit
+- Hosted on Replit
+- Single app (frontend + backend)
+
+---
+
+## Success Criteria
+
+- All applications captured automatically
+- Same-day review of new applicants
+- Managers can find any past applicant in seconds
+
+---
+
+## Notes for Builder Agent
+
+- Do not overbuild
+- Prioritize clarity over features
+- Match Red Front brand tone (warm, simple)
+- Optimize for mobile use
+
+---
+
+## Field Mapping Requirement (Critical)
+
+The fields in this system MUST match the existing Contact Form 7 fields.
+
+At build time:
+1. Inspect the live form on the website
+2. Extract all field names and types
+3. Map them exactly into the database schema
+4. Do not invent fields unless required for system function
+
+If mismatch occurs:
+- Log discrepancy
+- Normalize into internal schema
+- Preserve raw payload
+
+---
+
+## End State
+
+A simple internal hiring tool that “just works” and removes friction from hiring.

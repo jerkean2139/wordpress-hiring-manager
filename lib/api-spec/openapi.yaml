@@ -1,22 +1,28 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Red Front Hiring Manager API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: applicants
+    description: Applicant management
+  - name: notes
+    description: Applicant notes
+  - name: auth
+    description: Authentication
+  - name: webhook
+    description: WordPress webhook intake
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +30,250 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /applicants:
+    get:
+      operationId: listApplicants
+      tags: [applicants]
+      summary: List all applicants
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [new, reviewed, interviewing, hired, rejected, archived]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: position
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of applicants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Applicant"
+
+  /applicants/{id}:
+    get:
+      operationId: getApplicant
+      tags: [applicants]
+      summary: Get applicant detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Applicant details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Applicant"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateApplicant
+      tags: [applicants]
+      summary: Update applicant status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateApplicantRequest"
+      responses:
+        "200":
+          description: Updated applicant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Applicant"
+
+    delete:
+      operationId: deleteApplicant
+      tags: [applicants]
+      summary: Delete applicant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /applicants/{id}/notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List notes for applicant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Add note to applicant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNoteRequest"
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /webhook/cf7:
+    post:
+      operationId: webhookCf7
+      tags: [webhook]
+      summary: WordPress Contact Form 7 webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Cf7WebhookPayload"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Cf7WebhookPayload"
+      responses:
+        "200":
+          description: Application received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [applicants]
+      summary: Get dashboard stats
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +284,179 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - message
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        role:
+          type: string
+          enum: [owner, manager]
+      required:
+        - id
+        - email
+        - role
+
+    Applicant:
+      type: object
+      properties:
+        id:
+          type: integer
+        location:
+          type: string
+        position:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        phoneHome:
+          type: string
+        phoneBusiness:
+          type: string
+        phoneCell:
+          type: string
+        dateCanStart:
+          type: string
+        salaryDesired:
+          type: string
+        hasHighSchoolDiploma:
+          type: boolean
+        rawPayload:
+          type: object
+        status:
+          type: string
+          enum: [new, reviewed, interviewing, hired, rejected, archived]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        notesCount:
+          type: integer
+      required:
+        - id
+        - name
+        - status
+        - createdAt
+        - updatedAt
+
+    UpdateApplicantRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, reviewed, interviewing, hired, rejected, archived]
+
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+        applicantId:
+          type: integer
+        body:
+          type: string
+        author:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - applicantId
+        - body
+        - author
+        - createdAt
+
+    CreateNoteRequest:
+      type: object
+      properties:
+        body:
+          type: string
+      required:
+        - body
+
+    Cf7WebhookPayload:
+      type: object
+      additionalProperties: true
+
+    DashboardStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        new:
+          type: integer
+        reviewed:
+          type: integer
+        interviewing:
+          type: integer
+        hired:
+          type: integer
+        rejected:
+          type: integer
+        archived:
+          type: integer
+        recentApplicants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Applicant"
+      required:
+        - total
+        - new
+        - reviewed
+        - interviewing
+        - hired
+        - rejected
+        - archived
+        - recentApplicants
