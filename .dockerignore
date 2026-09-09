@@ -1,0 +1,35 @@
+# Never ship the host's install or build output into the image; the build stage
+# runs its own `pnpm install` and `pnpm build`.
+node_modules
+**/node_modules
+dist
+**/dist
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+.git
+.gitignore
+.github
+
+# Replit-specific tooling, not used off-platform.
+.replit
+.replitignore
+.replit-artifact
+**/.replit-artifact
+.cache
+.local
+
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+Dockerfile
+.dockerignore
+README.md
+replit.md
+docs
+
+# NOTE: attached_assets is intentionally NOT ignored — vite.config.ts exposes it
+# as the `@assets` alias, so ignoring it would break the build the moment a
+# component imports from there.

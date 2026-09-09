@@ -10,6 +10,7 @@ export function useAuth() {
 
   const { data: user, isLoading, error } = useGetMe({
     query: {
+      queryKey: getGetMeQueryKey(),
       retry: false,
       staleTime: Infinity,
     }
