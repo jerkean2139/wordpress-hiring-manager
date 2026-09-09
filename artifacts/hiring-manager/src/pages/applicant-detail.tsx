@@ -7,6 +7,8 @@ import {
   useDeleteApplicant,
   useListNotes,
   useCreateNote,
+  getGetApplicantQueryKey,
+  getListNotesQueryKey,
   ApplicantStatus 
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,11 +39,11 @@ export default function ApplicantDetail() {
   }, [isAuthenticated, isAuthLoading, setLocation]);
 
   const { data: applicant, isLoading: isApplicantLoading } = useGetApplicant(id, {
-    query: { enabled: id > 0 }
+    query: { queryKey: getGetApplicantQueryKey(id), enabled: id > 0 }
   });
 
   const { data: notes, isLoading: isNotesLoading } = useListNotes(id, {
-    query: { enabled: id > 0 }
+    query: { queryKey: getListNotesQueryKey(id), enabled: id > 0 }
   });
 
   const updateMutation = useUpdateApplicant({

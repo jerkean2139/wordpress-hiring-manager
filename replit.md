@@ -54,10 +54,21 @@ Fields mapped from Red Front Pizza Contact Form 7:
 ### users
 - id, email, password (bcrypt hashed), role (owner, manager)
 
-## Default Credentials
+## Login Accounts
 
-- Owner: owner@redfrontpizza.com / redfront2024
-- Manager: manager@redfrontpizza.com / redfront2024
+Accounts are created by the seed script; there are no default passwords and
+nothing is hardcoded. Passwords come from `SEED_OWNER_PASSWORD` and
+`SEED_MANAGER_PASSWORD`:
+
+```bash
+pnpm run build
+SEED_OWNER_PASSWORD='...' pnpm --filter @workspace/api-server run seed
+```
+
+Re-running is safe — existing accounts are left alone unless `SEED_FORCE=true`.
+
+The password `redfront2024` was documented here in plain text for the original
+Replit environment. Treat it as compromised; do not reuse it.
 
 ## API Endpoints
 
@@ -96,6 +107,15 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+
+## Deploying Off Replit
+
+The API server serves the built frontend at `/` alongside the API at `/api`, so
+the whole app runs as one service on a single origin. `Dockerfile` and
+`railway.json` configure that. See `docs/RAILWAY-DEPLOY.md`.
+
+`artifacts/mockup-sandbox` is a development-only design sandbox with no
+production deploy target — do not deploy it.
 
 ## Package Commands
 

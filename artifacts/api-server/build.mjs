@@ -15,7 +15,12 @@ async function buildAll() {
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    entryPoints: {
+      index: path.resolve(artifactDir, "src/index.ts"),
+      // One-off maintenance command, bundled into the same output so it can be
+      // run inside the deployed image without a toolchain.
+      seed: path.resolve(artifactDir, "src/scripts/seed.ts"),
+    },
     platform: "node",
     bundle: true,
     format: "esm",
